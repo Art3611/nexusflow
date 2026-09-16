@@ -24,8 +24,8 @@ consultoras/ingenierías de software.
 
 ### Fase 1 — Monolito bien estructurado (EN CURSO)
 - [x] Elección de proyecto y definición de alcance
-- [ ] Setup de repositorio GitHub y estructura de documentación
-- [ ] Scaffold backend (Spring Boot)
+- [x] Setup de repositorio GitHub y estructura de documentación
+- [x] Scaffold backend (Spring Boot 4.1.1, Java 21, PostgreSQL, Flyway)
 - [ ] Scaffold frontend (Angular)
 - [ ] Modelo de dominio: Pedidos, Inventario, Clientes
 - [ ] Autenticación y autorización (Spring Security + JWT)
@@ -65,8 +65,8 @@ cuando llegue el momento).
 |---|---|---|
 | ADR-0001 | Proyecto elegido: NexusFlow (OMS B2B) | ✅ Aceptado |
 | ADR-0002 | Monorepo en Fase 1, reevaluar en Fase 2 | ✅ Aceptado |
-| ADR-0003 | Base de datos relacional (a definir motor concreto) | ⏳ Pendiente |
-| ADR-0004 | Arquitectura en capas (Controller-Service-Repository) para Fase 1 | ⏳ Pendiente de formalizar |
+| ADR-0003 | PostgreSQL como motor de base de datos | ✅ Aceptado |
+| ADR-0004 | Flyway para gestión de esquema (Hibernate en modo `validate`) | ✅ Aceptado |
 
 ---
 
@@ -104,7 +104,15 @@ Para que el repositorio en sí mismo sea parte del portfolio:
 
 ## ✅ 8. Estado Actual / Próximo Paso
 
-**Estamos en:** Setup del repositorio y estructura de documentación.
+**Estamos en:** Backend arrancado con endpoint de health check funcionando
+(`GET /api/health`), conectado a PostgreSQL vía Docker Compose, con Flyway
+configurado (sin migraciones reales todavía) y Swagger UI disponible.
 
-**Siguiente paso técnico:** Inicializar el repositorio Git, crear la
-estructura de carpetas del monorepo y el `README.md` base.
+**Stack backend confirmado:** Spring Boot 4.1.1 · Java 21 · PostgreSQL 16 ·
+Flyway · Spring Data JPA (modo `validate`) · springdoc-openapi (Swagger) ·
+Lombok.
+
+**Siguiente paso técnico:** Diseñar el modelo de dominio de Pedidos
+(entidades `Order`, `OrderItem`, `Customer`, `Product`), escribir la
+primera migración Flyway real (`V1__init_schema.sql`) y crear el primer
+endpoint CRUD completo con su test de integración.

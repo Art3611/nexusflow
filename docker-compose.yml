@@ -1,0 +1,15 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: nexusflow-postgres
+    environment:
+      POSTGRES_DB: nexusflow
+      POSTGRES_USER: nexusflow
+      POSTGRES_PASSWORD: nexusflow
+    ports:
+      - "5432:5432"
+    volumes:
+      - nexusflow-postgres-data:/var/lib/postgresql/data
+
+volumes:
+  nexusflow-postgres-data:
