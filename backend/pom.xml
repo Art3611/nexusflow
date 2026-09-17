@@ -49,10 +49,15 @@
             <scope>runtime</scope>
         </dependency>
 
-        <!-- Flyway: gestion versionada del esquema de BD -->
+        <!-- Flyway: gestion versionada del esquema de BD.
+             IMPORTANTE (Spring Boot 4): usar el starter, no flyway-core
+             suelto. Desde Spring Boot 4, la autoconfiguracion de Flyway
+             vive en un modulo separado (spring-boot-flyway) que este
+             starter incluye; sin el, Flyway queda en el classpath como
+             libreria pero Spring Boot nunca la invoca al arrancar. -->
         <dependency>
-            <groupId>org.flywaydb</groupId>
-            <artifactId>flyway-core</artifactId>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-flyway</artifactId>
         </dependency>
         <dependency>
             <groupId>org.flywaydb</groupId>

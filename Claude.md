@@ -27,7 +27,7 @@ consultoras/ingenierías de software.
 - [x] Setup de repositorio GitHub y estructura de documentación
 - [x] Scaffold backend (Spring Boot 4.1.1, Java 21, PostgreSQL, Flyway)
 - [ ] Scaffold frontend (Angular)
-- [ ] Modelo de dominio: Pedidos, Inventario, Clientes
+- [x] Modelo de dominio: Pedidos, Inventario, Clientes
 - [ ] Autenticación y autorización (Spring Security + JWT)
 - [ ] CRUD de negocio con reglas (no trivial)
 - [ ] Tests unitarios e integración
@@ -67,12 +67,25 @@ cuando llegue el momento).
 | ADR-0002 | Monorepo en Fase 1, reevaluar en Fase 2 | ✅ Aceptado |
 | ADR-0003 | PostgreSQL como motor de base de datos | ✅ Aceptado |
 | ADR-0004 | Flyway para gestión de esquema (Hibernate en modo `validate`) | ✅ Aceptado |
+| ADR-0005 | Uso de `spring-boot-starter-flyway` (no `flyway-core` suelto) por la modularización de Spring Boot 4 | ✅ Aceptado |
 
 ---
 
 ## 🗃️ 5. Modelos de Datos
 
-_Pendiente — se completará cuando diseñemos el dominio de Pedidos._
+**Customer**: id, name, email (unique), taxId (unique), createdAt
+
+**Product**: id, sku (unique), name, price (BigDecimal), stock
+
+**Order**: id, customer (→Customer), status (enum: PENDING, CONFIRMED,
+PAID, SHIPPED, DELIVERED, CANCELLED), totalAmount, createdAt, items (→OrderItem, cascade ALL + orphanRemoval)
+
+**OrderItem**: id, order (→Order), product (→Product), quantity, unitPrice
+(precio congelado en el momento de la compra, no se recalcula si cambia
+`Product.price`)
+
+Migración: `V1__init_schema.sql` (tablas `customers`, `products`, `orders`,
+`order_items`, con FKs, CHECK constraints e índices sobre claves foráneas).
 
 ---
 
@@ -104,15 +117,24 @@ Para que el repositorio en sí mismo sea parte del portfolio:
 
 ## ✅ 8. Estado Actual / Próximo Paso
 
-**Estamos en:** Backend arrancado con endpoint de health check funcionando
-(`GET /api/health`), conectado a PostgreSQL vía Docker Compose, con Flyway
-configurado (sin migraciones reales todavía) y Swagger UI disponible.
+**Estamos en:** Backend arrancando correctamente de extremo a extremo:
+PostgreSQL vía Docker Compose, Flyway aplicando `V1__init_schema.sql`,
+Hibernate validando el modelo de dominio (`Customer`, `Product`, `Order`,
+`OrderItem`) sin errores, `GET /api/health` respondiendo y Swagger UI
+disponible.
+
+**Incidente resuelto (documentado en ADR-0005):** con Spring Boot 4, la
+autoconfiguración de Flyway vive en el módulo `spring-boot-flyway`, no en
+`flyway-core` directamente. Sin `spring-boot-starter-flyway`, Flyway queda
+en el classpath como librería inerte, sin que Spring Boot la invoque, lo
+que provocaba un fallo silencioso (`missing table [customers]`) sin
+ninguna pista de Flyway en los logs.
 
 **Stack backend confirmado:** Spring Boot 4.1.1 · Java 21 · PostgreSQL 16 ·
-Flyway · Spring Data JPA (modo `validate`) · springdoc-openapi (Swagger) ·
-Lombok.
+Flyway (vía `spring-boot-starter-flyway`) · Spring Data JPA (modo
+`validate`) · springdoc-openapi (Swagger) · Lombok.
 
-**Siguiente paso técnico:** Diseñar el modelo de dominio de Pedidos
-(entidades `Order`, `OrderItem`, `Customer`, `Product`), escribir la
-primera migración Flyway real (`V1__init_schema.sql`) y crear el primer
-endpoint CRUD completo con su test de integración.
+**Siguiente paso técnico:** Crear la capa de servicio (`OrderService`) con
+la lógica de creación de un pedido (validar stock, calcular total,
+descontar stock), los DTOs de entrada/salida, el controlador REST
+`POST /api/orders`, y su primer test de integración.
