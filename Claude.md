@@ -91,7 +91,16 @@ Migración: `V1__init_schema.sql` (tablas `customers`, `products`, `orders`,
 
 ## 🔌 6. Endpoints Creados
 
-_Pendiente — se completará a medida que implementemos controllers._
+| Método | Ruta | Descripción |
+|---|---|---|
+| GET | `/api/health` | Health check de infraestructura |
+| POST | `/api/orders` | Crea un pedido (valida cliente, valida y descuenta stock, calcula total) |
+| GET | `/api/orders/{id}` | Consulta un pedido por id |
+
+Errores manejados centralmente por `GlobalExceptionHandler`:
+- `ResourceNotFoundException` → 404
+- `InsufficientStockException` → 409
+- Errores de validación (`@Valid`) → 400 con detalle de campos
 
 ---
 
@@ -117,24 +126,19 @@ Para que el repositorio en sí mismo sea parte del portfolio:
 
 ## ✅ 8. Estado Actual / Próximo Paso
 
-**Estamos en:** Backend arrancando correctamente de extremo a extremo:
-PostgreSQL vía Docker Compose, Flyway aplicando `V1__init_schema.sql`,
-Hibernate validando el modelo de dominio (`Customer`, `Product`, `Order`,
-`OrderItem`) sin errores, `GET /api/health` respondiendo y Swagger UI
-disponible.
-
-**Incidente resuelto (documentado en ADR-0005):** con Spring Boot 4, la
-autoconfiguración de Flyway vive en el módulo `spring-boot-flyway`, no en
-`flyway-core` directamente. Sin `spring-boot-starter-flyway`, Flyway queda
-en el classpath como librería inerte, sin que Spring Boot la invoque, lo
-que provocaba un fallo silencioso (`missing table [customers]`) sin
-ninguna pista de Flyway en los logs.
+**Estamos en:** Primer flujo de negocio completo: `POST /api/orders` crea
+un pedido validando cliente y stock, congelando precios en `OrderItem`,
+descontando stock (vía dirty checking dentro de una transacción) y
+calculando el total. `GET /api/orders/{id}` permite consultarlo.
+Manejo centralizado de errores con `GlobalExceptionHandler` (404/409/400).
+3 tests de integración cubren el camino feliz y los dos casos de error
+principales (stock insuficiente, cliente inexistente).
 
 **Stack backend confirmado:** Spring Boot 4.1.1 · Java 21 · PostgreSQL 16 ·
 Flyway (vía `spring-boot-starter-flyway`) · Spring Data JPA (modo
 `validate`) · springdoc-openapi (Swagger) · Lombok.
 
-**Siguiente paso técnico:** Crear la capa de servicio (`OrderService`) con
-la lógica de creación de un pedido (validar stock, calcular total,
-descontar stock), los DTOs de entrada/salida, el controlador REST
-`POST /api/orders`, y su primer test de integración.
+**Siguiente paso técnico:** Verificar manualmente en Swagger/Postman,
+ejecutar los tests, y decidir entre seguir con más endpoints CRUD
+(clientes, productos) o introducir Spring Security (JWT) antes de seguir
+ampliando el dominio.
